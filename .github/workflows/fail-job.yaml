@@ -23,10 +23,12 @@ jobs:
         with:
           status: "warning"
           notification_title: 'Workflow: *{workflow}* has been triggered by ${{ github.actor }}'
-          message_format: '*{workflow}* has been triggered in <{repo_url}|{repo}> using GIT REF: <{commit_url}|{commit_sha}>'
+          message_format: '*{workflow}* has been triggered in <{repo_url}|{repo}> using SHA: <https://github.com/alan-mas/test-blackbox/commit/${{ github.event.inputs.git-sha-ref }}|${{ github.event.inputs.git-sha-ref }}>'
           footer: '<{run_url}|View Run>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+      # '${{ github.event.inputs.git-sha-ref }}'
 
       # - name: fail-jobs
       #   run: |
@@ -54,9 +56,13 @@ jobs:
     needs: fail-jobs-1
     steps:
 
+      # - name: fail-jobs
+      #   run: |
+      #     echo "pass"
+
       - name: fail-jobs
         run: |
-          echo "pass"
+          exit 137
 
 
       - name: Report Status
@@ -64,9 +70,28 @@ jobs:
         uses: ravsamhq/notify-slack-action@v1
         with:
           status: ${{ job.status }}
-          notify_when: 'failure'
-          notification_title: 'Workflow: *{workflow}* has {status_message} in job: *{job}*'
+          notify_when: 'failure,success'
+          notification_title: 'Workflow: *{workflow}* has *{status_message}* status in <{run_url}|Run>'
           message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
           footer: '<{run_url}|View Run>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  # final-slack-msg:
+  #   runs-on: ubuntu-latest
+  #   needs: [fail-jobs-1, fail-jobs-2]
+  #   if: success() && (steps.check.outcome != 'failure' || steps.check.outcome != 'failure')
+  #   if: success() && (steps.)
+  #   steps:
+  #     - name: Report Status
+  #       if: always()
+  #       uses: ravsamhq/notify-slack-action@v1
+  #       with:
+  #         status: ${{ job.status }}
+  #         notify_when: 'success'
+  #         notification_title: 'Workflow: *{workflow}* has finished successfully'
+  #         message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
+  #         footer: '<{run_url}|View Run>'
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
